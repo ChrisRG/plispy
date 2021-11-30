@@ -74,3 +74,35 @@ def standard_env():
     return env
 
 global_env = standard_env()
+
+## Eval
+def eval(x, env=global_env):
+    if isinstance(x, Symbol):
+        return env[x]
+    elif isinstance(x, Number):
+        return x
+    elif x[0] == 'if':
+        (_, test, conseq, alt) = x
+        exp = (conseq if eval(test, env) else alt)
+        return eval(exp, env)
+    elif x[0] == 'define':
+        (_, symbol, exp) = x
+        env[symbol] = eval(exp, env)
+    else:
+        proc = eval(x[0], env)
+        args = [eval(arg, env) for arg in x[1:]]
+        return proc(*args)
+
+
+## REPL 
+def repl(prompt='plispy> '):
+    while True:
+        val = eval(parse(input(prompt)))
+        if val is not None:
+            print(schemestr(val))
+
+def schemestr(exp):
+    if isinstance(exp, List):
+        return '(' + ' '.join(map(schemestr, exp)) + ')'
+    else:
+        return str(exp)
